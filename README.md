@@ -6,9 +6,9 @@
 
 [+] Improved it and added functionality to log the output to a "logfile.txt" file instead of printing it to the screen.
 
-# TakeMyRDP
-A keystroke logger targeting the Remote Desktop Protocol (RDP) related processes, It utilizes a low-level keyboard input hook, allowing it to record keystrokes in certain contexts (like in mstsc.exe and CredentialUIBroker.exe)
+# TakeMyRDP 2.0
+A keystroke logger targeting the Remote Desktop Protocol (RDP) related processes, It utilizes a low-level keyboard input hook, allowing it to record keystrokes in certain contexts (like in mstsc.exe and CredentialUIBroker.exe) it operates in the background not as a console windows anymore and handles all messages in a hidden window.
 
-# Demo
-https://github.com/TheD1rkMtr/FilelessPELoader/assets/123980007/b0805586-9e71-4cba-9d16-f7d6fb12cd7a
+# Updated Demo
+https://github.com/nocerainfosec/TakeMyRDP/assets/105872185/e44d1848-2388-409a-97a2-d16a217921dd
 
