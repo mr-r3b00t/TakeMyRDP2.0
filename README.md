@@ -12,3 +12,13 @@ A keystroke logger targeting the Remote Desktop Protocol (RDP) related processes
 # Updated Demo
 https://github.com/nocerainfosec/TakeMyRDP/assets/105872185/e44d1848-2388-409a-97a2-d16a217921dd
 
+# Contribute
+Firstly, a big thanks 🙏🏻 for the overwhelming response social media. I would be more than happy for [PRs](https://help.github.com/articles/about-pull-requests/) or [sponsors](https://www.nocerainformatica.com.br).
+
+<a href="https://www.buymeacoffee.com/guiinoceraE" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Rocket" style="height: auto !important;width: auto !important;" ></a>
+
+_P.S. For any queries or concerns, you can reach out to me on [NoceraLabs](https://nocerainformatica.com.br). I'll try my best to help 🙏._
+
+
+# Credits for the Original project
+TheD1rkMtr
