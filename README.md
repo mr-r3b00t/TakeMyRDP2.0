@@ -25,7 +25,8 @@ https://github.com/nocerainfosec/TakeMyRDP/assets/105872185/e44d1848-2388-409a-9
 ## Contribute
 Firstly, a big thanks 🙏🏻 for the overwhelming response social media. I would be more than happy for [PRs](https://help.github.com/articles/about-pull-requests/) or [sponsors](https://www.nocerainfosec.com.br).
 
-<a href="https://www.buymeacoffee.com/guiinoceraE" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Rocket" style="height: auto !important;width: auto !important;" ></a>
+## ❤️ Sponsoring
+If you like or rely on the work I do, please consider [sponsoring me](https://github.com/sponsors/nocerainfosec). I do open source all my projects, it would be really great if I could do more of it.
 
 _P.S. For any queries or concerns, you can reach out to me on [NoceraLabs](https://nocerainfosec.com.br). I'll try my best to help 🙏._
 
